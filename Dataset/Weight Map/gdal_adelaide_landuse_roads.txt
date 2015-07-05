@@ -1,0 +1,22 @@
+//LAND USE
+//
+//create high resolution raster (50k x 50k)
+gdal_rasterize -a CATEGORY -l dd_landuse_shp -at -a_nodata 0 -te 138.2 -35.3 138.9 -34.60 -ot Byte -ts 50000 50000 dd_landuse_shp.shp dd_landuse_shp1.tif
+//change projection from longlat to UTM Zone 54S
+gdalwarp -s_srs "+proj=longlat +datum=WGS84" -t_srs "+proj=utm +zone=54 +south +datum=WGS84" -ot Byte dd_landuse_shp1.tif dd_landuse_shp1_warp.tif
+//Extract only the region of interest corresponding to the digital elevation data
+gdal_translate -projwin 267810 6147360 298050 6117120 -of GTiff -ot Byte dd_landuse_shp1_warp.tif dd_landuse_shp1_warp_reduce.tif
+//Strip the geo-tag information to create a standard .tif for manipulation in GIMP
+gdal_translate -co PROFILE=BASELINE dd_landuse_shp1_warp_reduce.tif dd_landuse_shp1_warp_reduce_no_gt.tif
+
+//ROADS
+//
+//create high resolution raster (50k x 50k)
+gdal_rasterize -burn 100 -l Roads -at -a_nodata 0 -te 138.2 -35.3 138.9 -34.60 -ot Byte -ts 50000 50000 Roads.shp Roads.tif
+//change projection from longlat to UTM Zone 54S
+gdalwarp -s_srs "+proj=longlat +datum=WGS84" -t_srs "+proj=utm +zone=54 +south +datum=WGS84" -ot Byte Roads.tif Roads_warp.tif
+//Extract only the region of interest corresponding to the digital elevation data
+//This allows use to import the "weightmaps" into the engine and have everything align nicely
+gdal_translate -projwin 267810 6147360 298050 6117120 -of GTiff -ot Byte Roads_warp.tif Roads_warp_reduce.tif
+//Strip the geo-tag information to create a standard .tif for manipulation in GIMP
+gdal_translate -co PROFILE=BASELINE Roads_warp_reduce.tif Roads_warp_reduce_no_gt.tif
